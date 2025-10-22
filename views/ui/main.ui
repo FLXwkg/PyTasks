@@ -407,58 +407,71 @@
               
               <!-- COMMENTAIRES -->
               <item>
-               <widget class="QLabel" name="labelComments">
-                <property name="text">
-                 <string>Commentaires :</string>
-                </property>
-                <property name="font">
-                 <font>
-                  <weight>75</weight>
-                  <bold>true</bold>
-                 </font>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QListWidget" name="commentsList">
-                <property name="maximumHeight">
-                 <number>200</number>
-                </property>
-               </widget>
-              </item>
-              
-              <!-- AJOUTER COMMENTAIRE -->
-              <item>
-               <widget class="QWidget" name="commentInputContainer" native="true">
-                <layout class="QHBoxLayout" name="commentInputLayout">
-                 <property name="leftMargin">
-                  <number>0</number>
-                 </property>
-                 <property name="topMargin">
-                  <number>0</number>
-                 </property>
-                 <property name="rightMargin">
-                  <number>0</number>
-                 </property>
-                 <property name="bottomMargin">
-                  <number>0</number>
-                 </property>
-                 <item>
-                  <widget class="QLineEdit" name="commentInput">
-                   <property name="placeholderText">
-                    <string>Ajouter un commentaire...</string>
-                   </property>
+                <widget class="QLabel" name="labelComments">
+                  <property name="text">
+                  <string>Commentaires :</string>
+                  </property>
+                  <property name="font">
+                  <font>
+                    <weight>75</weight>
+                    <bold>true</bold>
+                  </font>
+                  </property>
+                </widget>
+                </item>
+                <item>
+                  <widget class="QListWidget" name="commentsList">
+                    <property name="maximumHeight">
+                    <number>200</number>
+                    </property>
+                    <property name="selectionMode">
+                    <enum>QAbstractItemView::ExtendedSelection</enum>
+                    </property>
                   </widget>
-                 </item>
-                 <item>
-                  <widget class="QPushButton" name="btnAddComment">
-                   <property name="text">
-                    <string>Ajouter</string>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </widget>
+                </item>
+
+                <!-- AJOUTER/SUPPRIMER COMMENTAIRE -->
+                <item>
+                <widget class="QWidget" name="commentInputContainer" native="true">
+                  <layout class="QHBoxLayout" name="commentInputLayout">
+                  <property name="leftMargin">
+                    <number>0</number>
+                  </property>
+                  <property name="topMargin">
+                    <number>0</number>
+                  </property>
+                  <property name="rightMargin">
+                    <number>0</number>
+                  </property>
+                  <property name="bottomMargin">
+                    <number>0</number>
+                  </property>
+                  <item>
+                    <widget class="QLineEdit" name="commentInput">
+                    <property name="placeholderText">
+                      <string>Ajouter un commentaire...</string>
+                    </property>
+                    </widget>
+                  </item>
+                  <item>
+                    <widget class="QPushButton" name="btnAddComment">
+                    <property name="text">
+                      <string>Ajouter</string>
+                    </property>
+                    </widget>
+                  </item>
+                  <item>
+                    <widget class="QPushButton" name="btnDeleteComment">
+                    <property name="text">
+                      <string>Supprimer</string>
+                    </property>
+                    <property name="enabled">
+                      <bool>false</bool>
+                    </property>
+                    </widget>
+                  </item>
+                  </layout>
+                </widget>
               </item>
               
              </layout>

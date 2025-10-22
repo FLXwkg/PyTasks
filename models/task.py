@@ -1,6 +1,7 @@
 from enum import Enum
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
+from models.comment import Comment
 import uuid
 
 class TaskState(Enum):
@@ -115,6 +116,29 @@ class Task:
       """
       self.comments.append(comment)
       self.updated_at = datetime.now()
+
+    
+    def remove_comments(self, comments_to_remove: List['Comment']) -> int:
+      """
+      Supprime plusieurs commentaires.
+      
+      Args:
+          comments_to_remove: Liste des objets Comment à supprimer
+          
+      Returns:
+          Nombre de commentaires supprimés
+      """
+      initial_length = len(self.comments)
+      comment_ids = {c.id for c in comments_to_remove}
+      
+      self.comments = [c for c in self.comments if c.id not in comment_ids]
+      
+      deleted_count = initial_length - len(self.comments)
+      
+      if deleted_count > 0:
+          self.updated_at = datetime.now()
+      
+      return deleted_count
     
     def close_task(self):
         """Clôture = DONE + end_date auto"""

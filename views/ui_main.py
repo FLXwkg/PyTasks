@@ -15,11 +15,11 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QComboBox, QDateTimeEdit, QFrame,
-    QGroupBox, QHBoxLayout, QLabel, QLineEdit,
-    QListWidget, QListWidgetItem, QMainWindow, QPushButton,
-    QSizePolicy, QSpacerItem, QStatusBar, QTabWidget,
-    QTextEdit, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QAbstractItemView, QApplication, QComboBox, QDateTimeEdit,
+    QFrame, QGroupBox, QHBoxLayout, QLabel,
+    QLineEdit, QListWidget, QListWidgetItem, QMainWindow,
+    QPushButton, QSizePolicy, QSpacerItem, QStatusBar,
+    QTabWidget, QTextEdit, QVBoxLayout, QWidget)
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -232,6 +232,7 @@ class Ui_MainWindow(object):
         self.commentsList = QListWidget(self.taskDetailsGroup)
         self.commentsList.setObjectName(u"commentsList")
         self.commentsList.setMaximumHeight(200)
+        self.commentsList.setSelectionMode(QAbstractItemView.ExtendedSelection)
 
         self.taskDetailsLayout.addWidget(self.commentsList)
 
@@ -249,6 +250,12 @@ class Ui_MainWindow(object):
         self.btnAddComment.setObjectName(u"btnAddComment")
 
         self.commentInputLayout.addWidget(self.btnAddComment)
+
+        self.btnDeleteComment = QPushButton(self.commentInputContainer)
+        self.btnDeleteComment.setObjectName(u"btnDeleteComment")
+        self.btnDeleteComment.setEnabled(False)
+
+        self.commentInputLayout.addWidget(self.btnDeleteComment)
 
 
         self.taskDetailsLayout.addWidget(self.commentInputContainer)
@@ -340,6 +347,7 @@ class Ui_MainWindow(object):
         self.labelComments.setText(QCoreApplication.translate("MainWindow", u"Commentaires :", None))
         self.commentInput.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Ajouter un commentaire...", None))
         self.btnAddComment.setText(QCoreApplication.translate("MainWindow", u"Ajouter", None))
+        self.btnDeleteComment.setText(QCoreApplication.translate("MainWindow", u"Supprimer", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_main), QCoreApplication.translate("MainWindow", u"T\u00e2ches", None))
         self.historyLog.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Les logs des actions appara\u00eetront ici...", None))
         self.btnClearHistory.setText(QCoreApplication.translate("MainWindow", u"Effacer l'historique", None))

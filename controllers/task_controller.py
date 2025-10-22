@@ -4,7 +4,7 @@ Fait le lien entre les vues (UI) et les modèles (logique métier).
 """
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QMessageBox
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 
 from models.task import Task, TaskState
@@ -198,6 +198,47 @@ class TaskController(QObject):
             
         except ValueError as e:
             self._show_error(f"Commentaire invalide : {str(e)}")
+            return False
+        
+    def delete_comments_from_current_task(self, comments: List) -> bool:
+        """
+        Supprime plusieurs commentaires de la tâche actuelle.
+        
+        Args:
+            comments: Liste des objets Comment à supprimer
+            
+        Returns:
+            True si au moins un commentaire a été supprimé
+        """
+        if not self.current_task or not comments:
+            return False
+        
+        try:
+            deleted_count = self.current_task.remove_comments(comments)
+            
+            if deleted_count > 0:
+                self.repository.save(self.current_task)
+                
+                # Log différent selon le nombre
+                if deleted_count == 1:
+                    comment_content = comments[0].content[:50]  # Limite à 50 caractères
+                    self.logger.log(
+                        "warning",
+                        f"Commentaire supprimé de '{self.current_task.title}' : '{comment_content}'"
+                    )
+                else:
+                    self.logger.log(
+                        "warning",
+                        f"{deleted_count} commentaires supprimés de '{self.current_task.title}'"
+                    )
+                
+                self.task_selected.emit(self.current_task)  # Rafraîchit l'affichage
+                return True
+            
+            return False
+            
+        except Exception as e:
+            self.logger.log("error", f"Erreur suppression commentaire(s) : {str(e)}")
             return False
     
     # ========== SÉLECTION ==========

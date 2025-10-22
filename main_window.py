@@ -96,6 +96,9 @@ class MainWindow(QMainWindow):
         # Commentaires
         self.ui.btnAddComment.clicked.connect(self._on_add_comment)
         self.ui.commentInput.returnPressed.connect(self._on_add_comment)  # Entrée = ajouter
+        self.ui.btnDeleteComment.clicked.connect(self._on_delete_comment)
+        self.ui.commentsList.itemSelectionChanged.connect(self._on_comment_selection_changed)
+  
         
         # === HISTORIQUE ===
         self.ui.btnClearHistory.clicked.connect(self._on_clear_history)
@@ -212,13 +215,14 @@ class MainWindow(QMainWindow):
         self._refresh_comments(task)
     
     def _refresh_comments(self, task: Task):
-        """Rafraîchit la liste des commentaires"""
-        self.ui.commentsList.clear()
-        
-        for comment in task.comments:
-            timestamp = comment.created_at.strftime("%d/%m/%Y %H:%M")
-            item_text = f"💬 [{timestamp}] {comment.content}"
-            self.ui.commentsList.addItem(item_text)
+      """Rafraîchit la liste des commentaires"""
+      self.ui.commentsList.clear()
+      
+      for comment in task.comments:
+          timestamp = comment.created_at.strftime("%d/%m/%Y %H:%M")
+          item_text = f"[{timestamp}] {comment.content}"
+          item = QListWidgetItem(item_text)
+          self.ui.commentsList.addItem(item)
     
     # ========== CRÉATION TÂCHE ==========
     
@@ -315,6 +319,15 @@ class MainWindow(QMainWindow):
               self.controller.repository.save(task)
               self.controller.logger.log("info", f"Tâche créée : '{task.title}'")
               self.controller.load_tasks()
+
+              self.controller.select_task(task.id)
+            
+              # Trouver l'item dans la liste et le sélectionner visuellement
+              for i in range(self.ui.taskList.count()):
+                  item = self.ui.taskList.item(i)
+                  if item.data(Qt.UserRole) == task.id:
+                      self.ui.taskList.setCurrentItem(item)
+                      break
               
               self.statusBar().showMessage("Tâche créée !", 3000)
               
@@ -427,6 +440,66 @@ class MainWindow(QMainWindow):
             self._refresh_comments(self.controller.current_task)
             
             self.statusBar().showMessage("💬 Commentaire ajouté", 2000)
+
+    @Slot()
+    def _on_comment_selection_changed(self):
+        """Active/désactive le bouton supprimer selon la sélection"""
+        selected_count = len(self.ui.commentsList.selectedItems())
+        self.ui.btnDeleteComment.setEnabled(selected_count > 0)
+        
+        # Change le texte du bouton selon le nombre sélectionné
+        if selected_count > 1:
+            self.ui.btnDeleteComment.setText(f"Supprimer ({selected_count})")
+        else:
+            self.ui.btnDeleteComment.setText("Supprimer")
+
+    @Slot()
+    def _on_delete_comment(self):
+        """Supprime les commentaires sélectionnés"""
+        if not self.controller.current_task:
+            return
+        
+        selected_items = self.ui.commentsList.selectedItems()
+        if not selected_items:
+            return
+        
+        # Récupère les objets Comment correspondants
+        comments_to_delete = []
+        for item in selected_items:
+            comment_index = self.ui.commentsList.row(item)
+            
+            if 0 <= comment_index < len(self.controller.current_task.comments):
+                comment = self.controller.current_task.comments[comment_index]
+                comments_to_delete.append(comment)
+        
+        if not comments_to_delete:
+            return
+        
+        # Message de confirmation adapté
+        count = len(comments_to_delete)
+        if count == 1:
+            message = f"Supprimer ce commentaire ?\n\n{comments_to_delete[0].content}"
+        else:
+            message = f"Supprimer {count} commentaires sélectionnés ?"
+        
+        reply = QMessageBox.question(
+            self,
+            "Supprimer commentaire(s)",
+            message,
+            QMessageBox.Yes | QMessageBox.No
+        )
+        
+        if reply == QMessageBox.Yes:
+            success = self.controller.delete_comments_from_current_task(comments_to_delete)
+            
+            if success:
+                self._refresh_comments(self.controller.current_task)
+                
+                if count == 1:
+                    self.statusBar().showMessage("Commentaire supprimé", 2000)
+                else:
+                    self.statusBar().showMessage(f"{count} commentaires supprimés", 2000)
+
     
     # ========== HISTORIQUE ==========
     
