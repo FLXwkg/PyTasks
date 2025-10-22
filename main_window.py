@@ -190,15 +190,29 @@ class MainWindow(QMainWindow):
         self.ui.titleEdit.setText(task.title)
         self.ui.descriptionEdit.setPlainText(task.description)
         
-        # État
-        state_index_map = {
-            TaskState.TODO: 0,
-            TaskState.IN_PROGRESS: 1,
-            TaskState.DONE: 2,
-            TaskState.ABANDONED: 3,
-            TaskState.WAITING: 4
-        }
-        self.ui.stateEdit.setCurrentIndex(state_index_map.get(task.state, 0))
+        # État - Retire "Réalisé" de la liste si pas déjà clôturé
+        self.ui.stateEdit.clear()
+        if task.state == TaskState.DONE:
+            # Si déjà clôturé, affiche seulement "Réalisé"
+            self.ui.stateEdit.addItem("Réalisé", TaskState.DONE)
+            self.ui.stateEdit.setCurrentIndex(0)
+        else:
+            # Sinon, affiche tous les états sauf "Réalisé"
+            state_map = [
+                ("À faire", TaskState.TODO),
+                ("En cours", TaskState.IN_PROGRESS),
+                ("Abandonné", TaskState.ABANDONED),
+                ("En attente", TaskState.WAITING)
+            ]
+            
+            for label, state in state_map:
+                self.ui.stateEdit.addItem(label, state)
+            
+            # Sélectionne l'état actuel
+            for i in range(self.ui.stateEdit.count()):
+                if self.ui.stateEdit.itemData(i) == task.state:
+                    self.ui.stateEdit.setCurrentIndex(i)
+                    break
         
         # Dates
         if task.start_date:
@@ -211,7 +225,34 @@ class MainWindow(QMainWindow):
         else:
             self.ui.endDateEdit.clear()
         
-        # Commentaires
+        # 🔒 VERROUILLAGE si tâche clôturée (DONE)
+        is_done = task.state == TaskState.DONE
+        
+        self.ui.titleEdit.setReadOnly(is_done)
+        self.ui.descriptionEdit.setReadOnly(is_done)
+        self.ui.startDateEdit.setReadOnly(is_done)
+        self.ui.endDateEdit.setReadOnly(is_done)
+        self.ui.stateEdit.setEnabled(not is_done)
+        self.ui.btnSave.setEnabled(not is_done)
+        self.ui.btnClose.setEnabled(not is_done)
+        
+        # Style visuel pour les champs verrouillés
+        if is_done:
+            locked_style = "background-color: #f0f0f0; color: #666;"
+            self.ui.titleEdit.setStyleSheet(locked_style)
+            self.ui.descriptionEdit.setStyleSheet(locked_style)
+            self.ui.startDateEdit.setStyleSheet(locked_style)
+            self.ui.endDateEdit.setStyleSheet(locked_style)
+            self.ui.stateEdit.setStyleSheet(locked_style)
+        else:
+            # Réinitialise le style
+            self.ui.titleEdit.setStyleSheet("")
+            self.ui.descriptionEdit.setStyleSheet("")
+            self.ui.startDateEdit.setStyleSheet("")
+            self.ui.endDateEdit.setStyleSheet("")
+            self.ui.stateEdit.setStyleSheet("")
+        
+        # Les commentaires restent toujours accessibles
         self._refresh_comments(task)
     
     def _refresh_comments(self, task: Task):
@@ -400,22 +441,31 @@ class MainWindow(QMainWindow):
         if not self.controller.current_task:
             return
         
-        # Demande confirmation
+        task = self.controller.current_task
+        
+        # Message détaillé
+        message = (
+            f"Clôturer la tâche '{task.title}' ?\n\n"
+            "Actions effectuées :\n"
+            "• État changé en 'Réalisé'\n"
+            "• Date de fin mise à la date actuelle\n"
+            "• Modification des champs verrouillée\n\n"
+            "Les commentaires resteront accessibles."
+        )
+        
         reply = QMessageBox.question(
             self,
             "Clôturer la tâche",
-            f"Clôturer la tâche '{self.controller.current_task.title}' ?\n\n"
-            "Elle sera marquée comme 'Réalisé' avec la date de fin actuelle.",
+            message,
             QMessageBox.Yes | QMessageBox.No
         )
         
         if reply == QMessageBox.Yes:
             success = self.controller.close_current_task()
-            
             if success:
-                # Rafraîchit l'affichage
+                # Rafraîchit l'affichage (verrouillera les champs)
                 self.controller.select_task(self.controller.current_task.id)
-                self.statusBar().showMessage("✅ Tâche clôturée !", 3000)
+                self.statusBar().showMessage("Tâche clôturée et verrouillée !", 3000)
     
     # ========== COMMENTAIRES ==========
     
