@@ -80,3 +80,19 @@ class TaskRepository:
             results.append(task)
         
         return results
+    
+    def find_by_id(self, task_id: str) -> Optional[Task]:
+      """
+      Trouve une tâche par son ID.
+      
+      Args:
+          task_id: L'ID de la tâche à rechercher
+          
+      Returns:
+          La tâche trouvée ou None si elle n'existe pas
+      """
+      tasks = self.load_all()
+      for task in tasks:
+          if task.id == task_id:
+              return task
+      return None

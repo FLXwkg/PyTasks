@@ -1,0 +1,543 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1200</width>
+    <height>800</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>PyTasks - Gestionnaire de Tâches</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <widget class="QTabWidget" name="tabWidget">
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      
+      <!-- ONGLET 1 : PRINCIPAL -->
+      <widget class="QWidget" name="tab_main">
+       <attribute name="title">
+        <string>Tâches</string>
+       </attribute>
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        
+        <!-- SIDEBAR GAUCHE -->
+        <item>
+         <widget class="QWidget" name="sidebar" native="true">
+          <property name="maximumWidth">
+           <number>350</number>
+          </property>
+          <layout class="QVBoxLayout" name="sidebarLayout">
+           
+           <!-- BARRE DE RECHERCHE -->
+           <item>
+            <widget class="QLineEdit" name="searchBar">
+             <property name="placeholderText">
+              <string>Rechercher une tâche...</string>
+             </property>
+            </widget>
+           </item>
+           
+           <!-- FILTRE PAR ÉTAT -->
+           <item>
+            <widget class="QComboBox" name="stateFilter">
+             <property name="toolTip">
+              <string>Filtrer par état</string>
+             </property>
+             <item>
+              <property name="text">
+               <string>Tous les états</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>À faire</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>En cours</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Réalisé</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Abandonné</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>En attente</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+           
+           <!-- LISTE DES TÂCHES -->
+           <item>
+            <widget class="QListWidget" name="taskList">
+             <property name="toolTip">
+              <string>Liste des tâches</string>
+             </property>
+            </widget>
+           </item>
+           
+           <!-- BOUTONS D'ACTION -->
+           <item>
+            <widget class="QWidget" name="buttonContainer" native="true">
+             <layout class="QHBoxLayout" name="buttonLayout">
+              <property name="leftMargin">
+               <number>0</number>
+              </property>
+              <property name="topMargin">
+               <number>0</number>
+              </property>
+              <property name="rightMargin">
+               <number>0</number>
+              </property>
+              <property name="bottomMargin">
+               <number>0</number>
+              </property>
+              <item>
+               <widget class="QPushButton" name="btnAdd">
+                <property name="text">
+                 <string>Ajouter</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="btnDelete">
+                <property name="text">
+                 <string>Supprimer</string>
+                </property>
+                <property name="enabled">
+                 <bool>false</bool>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           
+          </layout>
+         </widget>
+        </item>
+        
+        <!-- PANNEAU DÉTAILS DROITE -->
+        <item>
+         <widget class="QWidget" name="detailsPanel" native="true">
+          <layout class="QVBoxLayout" name="detailsLayout">
+           
+           <!-- MESSAGE SI AUCUNE SÉLECTION -->
+           <item>
+            <widget class="QLabel" name="noSelectionLabel">
+             <property name="text">
+              <string>Sélectionnez une tâche pour voir les détails</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>12</pointsize>
+               <italic>true</italic>
+              </font>
+             </property>
+            </widget>
+           </item>
+           
+           <!-- GROUPE DÉTAILS TÂCHE (caché par défaut) -->
+           <item>
+            <widget class="QGroupBox" name="taskDetailsGroup">
+             <property name="title">
+              <string>Détails de la tâche</string>
+             </property>
+             <property name="visible">
+              <bool>false</bool>
+             </property>
+             <layout class="QVBoxLayout" name="taskDetailsLayout">
+              
+              <!-- TITRE -->
+              <item>
+               <widget class="QWidget" name="titleContainer" native="true">
+                <layout class="QHBoxLayout" name="titleLayout">
+                 <property name="leftMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>0</number>
+                 </property>
+                 <item>
+                  <widget class="QLabel" name="labelTitle">
+                   <property name="text">
+                    <string>Titre :</string>
+                   </property>
+                   <property name="font">
+                    <font>
+                     <weight>75</weight>
+                     <bold>true</bold>
+                    </font>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLineEdit" name="titleEdit"/>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+              
+              <!-- ÉTAT -->
+              <item>
+               <widget class="QWidget" name="stateContainer" native="true">
+                <layout class="QHBoxLayout" name="stateLayout">
+                 <property name="leftMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>0</number>
+                 </property>
+                 <item>
+                  <widget class="QLabel" name="labelState">
+                   <property name="text">
+                    <string>État :</string>
+                   </property>
+                   <property name="font">
+                    <font>
+                     <weight>75</weight>
+                     <bold>true</bold>
+                    </font>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QComboBox" name="stateEdit">
+                   <item>
+                    <property name="text">
+                     <string>À faire</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>En cours</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Réalisé</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Abandonné</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>En attente</string>
+                    </property>
+                   </item>
+                  </widget>
+                 </item>
+                 <item>
+                  <spacer name="horizontalSpacer">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+              
+              <!-- DATES -->
+              <item>
+               <widget class="QWidget" name="datesContainer" native="true">
+                <layout class="QHBoxLayout" name="datesLayout">
+                 <property name="leftMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>0</number>
+                 </property>
+                 <item>
+                  <widget class="QLabel" name="labelStartDate">
+                   <property name="text">
+                    <string>Début :</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QDateTimeEdit" name="startDateEdit">
+                   <property name="calendarPopup">
+                    <bool>true</bool>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="labelEndDate">
+                   <property name="text">
+                    <string>Fin :</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QDateTimeEdit" name="endDateEdit">
+                   <property name="calendarPopup">
+                    <bool>true</bool>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+              
+              <!-- DESCRIPTION -->
+              <item>
+               <widget class="QLabel" name="labelDescription">
+                <property name="text">
+                 <string>Description :</string>
+                </property>
+                <property name="font">
+                 <font>
+                  <weight>75</weight>
+                  <bold>true</bold>
+                 </font>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QTextEdit" name="descriptionEdit">
+                <property name="maximumHeight">
+                 <number>150</number>
+                </property>
+               </widget>
+              </item>
+              
+              <!-- BOUTONS ACTIONS TÂCHE -->
+              <item>
+               <widget class="QWidget" name="taskActionsContainer" native="true">
+                <layout class="QHBoxLayout" name="taskActionsLayout">
+                 <property name="leftMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>0</number>
+                 </property>
+                 <item>
+                  <widget class="QPushButton" name="btnSave">
+                   <property name="text">
+                    <string>Enregistrer</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="btnClose">
+                   <property name="text">
+                    <string>Clôturer</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <spacer name="horizontalSpacer_2">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+              
+              <!-- SÉPARATEUR -->
+              <item>
+               <widget class="Line" name="line">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+               </widget>
+              </item>
+              
+              <!-- COMMENTAIRES -->
+              <item>
+               <widget class="QLabel" name="labelComments">
+                <property name="text">
+                 <string>Commentaires :</string>
+                </property>
+                <property name="font">
+                 <font>
+                  <weight>75</weight>
+                  <bold>true</bold>
+                 </font>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QListWidget" name="commentsList">
+                <property name="maximumHeight">
+                 <number>200</number>
+                </property>
+               </widget>
+              </item>
+              
+              <!-- AJOUTER COMMENTAIRE -->
+              <item>
+               <widget class="QWidget" name="commentInputContainer" native="true">
+                <layout class="QHBoxLayout" name="commentInputLayout">
+                 <property name="leftMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>0</number>
+                 </property>
+                 <item>
+                  <widget class="QLineEdit" name="commentInput">
+                   <property name="placeholderText">
+                    <string>Ajouter un commentaire...</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="btnAddComment">
+                   <property name="text">
+                    <string>Ajouter</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+              
+             </layout>
+            </widget>
+           </item>
+           
+          </layout>
+         </widget>
+        </item>
+        
+       </layout>
+      </widget>
+      
+      <!-- ONGLET 2 : HISTORIQUE -->
+      <widget class="QWidget" name="tab_history">
+       <attribute name="title">
+        <string>Historique</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="historyLayout">
+        <item>
+         <widget class="QTextEdit" name="historyLog">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+          <property name="placeholderText">
+           <string>Les logs des actions apparaîtront ici...</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QWidget" name="historyButtonsContainer" native="true">
+          <layout class="QHBoxLayout" name="historyButtonsLayout">
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <spacer name="horizontalSpacer_3">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QPushButton" name="btnClearHistory">
+             <property name="text">
+              <string>Effacer l'historique</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  
+  <!-- BARRE DE STATUT -->
+  <widget class="QStatusBar" name="statusbar"/>
+  
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
