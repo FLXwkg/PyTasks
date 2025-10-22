@@ -224,28 +224,103 @@ class MainWindow(QMainWindow):
     
     @Slot()
     def _on_add_task(self):
-        """Déclenché par le bouton Ajouter"""
-        # Boîte de dialogue pour le titre
-        title, ok = QInputDialog.getText(
-            self,
-            "Nouvelle tâche",
-            "Titre de la tâche :"
-        )
-        
-        if ok and title:
-            # Boîte de dialogue pour la description (optionnel)
-            description, ok = QInputDialog.getMultiLineText(
-                self,
-                "Nouvelle tâche",
-                "Description (optionnel) :"
-            )
-            
-            if ok:
-                success = self.controller.create_task(title, description)
-                
-                if success:
-                    self.statusBar().showMessage("✅ Tâche créée !", 3000)
-    
+      """Déclenché par le bouton Ajouter - Affiche une modale complète"""
+      from PySide6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QTextEdit, QDateTimeEdit, QComboBox, QPushButton, QFormLayout
+      from PySide6.QtCore import QDateTime
+      from datetime import datetime, timedelta
+      
+      # Créer la modale
+      dialog = QDialog(self)
+      dialog.setWindowTitle("Nouvelle tâche")
+      dialog.setMinimumWidth(500)
+      
+      # Layout principal
+      layout = QVBoxLayout()
+      form_layout = QFormLayout()
+      
+      # Champ Titre
+      title_input = QLineEdit()
+      title_input.setPlaceholderText("Entrez le titre de la tâche...")
+      form_layout.addRow("Titre *:", title_input)
+      
+      # Champ Description
+      description_input = QTextEdit()
+      description_input.setPlaceholderText("Description détaillée (optionnel)...")
+      description_input.setMaximumHeight(100)
+      form_layout.addRow("Description :", description_input)
+      
+      # Date de début (date actuelle par défaut)
+      start_date_input = QDateTimeEdit()
+      start_date_input.setCalendarPopup(True)
+      start_date_input.setDateTime(QDateTime.currentDateTime())
+      form_layout.addRow("Date de début :", start_date_input)
+      
+      # Date de fin (date actuelle + 1 jour par défaut)
+      end_date_input = QDateTimeEdit()
+      end_date_input.setCalendarPopup(True)
+      tomorrow = datetime.now() + timedelta(days=1)
+      end_date_input.setDateTime(QDateTime(tomorrow))
+      form_layout.addRow("Date de fin :", end_date_input)
+      
+      # État initial
+      state_input = QComboBox()
+      state_input.addItem("À faire", TaskState.TODO)
+      state_input.addItem("En attente", TaskState.WAITING)
+      state_input.setCurrentIndex(0)  # TODO par défaut
+      form_layout.addRow("État initial :", state_input)
+      
+      layout.addLayout(form_layout)
+      
+      # Boutons
+      button_layout = QHBoxLayout()
+      
+      btn_cancel = QPushButton("Annuler")
+      btn_cancel.clicked.connect(dialog.reject)
+      
+      btn_create = QPushButton("Créer")
+      btn_create.setDefault(True)  # Bouton par défaut (Entrée)
+      btn_create.clicked.connect(dialog.accept)
+      
+      button_layout.addStretch()
+      button_layout.addWidget(btn_cancel)
+      button_layout.addWidget(btn_create)
+      
+      layout.addLayout(button_layout)
+      
+      dialog.setLayout(layout)
+      
+      # Afficher la modale
+      if dialog.exec() == QDialog.Accepted:
+          title = title_input.text().strip()
+          
+          if not title:
+              QMessageBox.warning(self, "Erreur", "Le titre est obligatoire !")
+              return
+          
+          description = description_input.toPlainText().strip()
+          start_date = start_date_input.dateTime().toPython()
+          end_date = end_date_input.dateTime().toPython()
+          state = state_input.currentData()  # Récupère le TaskState
+          
+          # Créer la tâche avec tous les paramètres
+          try:
+              task = Task(
+                  title=title,
+                  description=description,
+                  start_date=start_date,
+                  end_date=end_date,
+                  state=state
+              )
+              
+              self.controller.repository.save(task)
+              self.controller.logger.log("info", f"Tâche créée : '{task.title}'")
+              self.controller.load_tasks()
+              
+              self.statusBar().showMessage("Tâche créée !", 3000)
+              
+          except ValueError as e:
+              QMessageBox.critical(self, "Erreur de validation", str(e))
+      
     # ========== MODIFICATION TÂCHE ==========
     
     @Slot()
