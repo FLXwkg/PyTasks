@@ -204,79 +204,120 @@
                </widget>
               </item>
               
-              <!-- ÉTAT -->
+              <!-- ÉTAT (lecture seule) et DÉPENDANCE -->
               <item>
-               <widget class="QWidget" name="stateContainer" native="true">
-                <layout class="QHBoxLayout" name="stateLayout">
-                 <property name="leftMargin">
+              <widget class="QWidget" name="stateContainer" native="true">
+                <layout class="QVBoxLayout" name="stateMainLayout">
+                <property name="leftMargin">
                   <number>0</number>
-                 </property>
-                 <property name="topMargin">
+                </property>
+                <property name="topMargin">
                   <number>0</number>
-                 </property>
-                 <property name="rightMargin">
+                </property>
+                <property name="rightMargin">
                   <number>0</number>
-                 </property>
-                 <property name="bottomMargin">
+                </property>
+                <property name="bottomMargin">
                   <number>0</number>
-                 </property>
-                 <item>
-                  <widget class="QLabel" name="labelState">
-                   <property name="text">
-                    <string>État :</string>
-                   </property>
-                   <property name="font">
-                    <font>
-                     <weight>75</weight>
-                     <bold>true</bold>
-                    </font>
-                   </property>
+                </property>
+                
+                <!-- État actuel (info seulement) -->
+                <item>
+                  <widget class="QWidget" name="stateInfoContainer" native="true">
+                  <layout class="QHBoxLayout" name="stateInfoLayout">
+                    <property name="leftMargin">
+                    <number>0</number>
+                    </property>
+                    <property name="topMargin">
+                    <number>0</number>
+                    </property>
+                    <property name="rightMargin">
+                    <number>0</number>
+                    </property>
+                    <property name="bottomMargin">
+                    <number>0</number>
+                    </property>
+                    <item>
+                    <widget class="QLabel" name="labelState">
+                      <property name="text">
+                      <string>État :</string>
+                      </property>
+                      <property name="font">
+                      <font>
+                        <weight>75</weight>
+                        <bold>true</bold>
+                      </font>
+                      </property>
+                    </widget>
+                    </item>
+                    <item>
+                    <widget class="QLabel" name="stateDisplay">
+                      <property name="text">
+                      <string>À faire</string>
+                      </property>
+                    </widget>
+                    </item>
+                    <item>
+                    <spacer name="horizontalSpacer">
+                      <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                      </property>
+                      <property name="sizeHint" stdset="0">
+                      <size>
+                        <width>40</width>
+                        <height>20</height>
+                      </size>
+                      </property>
+                    </spacer>
+                    </item>
+                  </layout>
                   </widget>
-                 </item>
-                 <item>
-                  <widget class="QComboBox" name="stateEdit">
-                   <item>
-                    <property name="text">
-                     <string>À faire</string>
+                </item>
+                
+                <!-- Dépendance (visible seulement si EN ATTENTE) -->
+                <item>
+                  <widget class="QWidget" name="waitingForContainer" native="true">
+                  <property name="visible">
+                    <bool>false</bool>
+                  </property>
+                  <layout class="QHBoxLayout" name="waitingForLayout">
+                    <property name="leftMargin">
+                    <number>0</number>
                     </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>En cours</string>
+                    <property name="topMargin">
+                    <number>0</number>
                     </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>Réalisé</string>
+                    <property name="rightMargin">
+                    <number>0</number>
                     </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>Abandonné</string>
+                    <property name="bottomMargin">
+                    <number>0</number>
                     </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>En attente</string>
-                    </property>
-                   </item>
+                    <item>
+                    <widget class="QLabel" name="labelWaitingFor">
+                      <property name="text">
+                      <string>En attente de :</string>
+                      </property>
+                      <property name="font">
+                      <font>
+                        <italic>true</italic>
+                      </font>
+                      </property>
+                    </widget>
+                    </item>
+                    <item>
+                    <widget class="QComboBox" name="waitingForSelect">
+                      <property name="toolTip">
+                      <string>Sélectionnez la tâche dont dépend cette tâche</string>
+                      </property>
+                    </widget>
+                    </item>
+                  </layout>
                   </widget>
-                 </item>
-                 <item>
-                  <spacer name="horizontalSpacer">
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>40</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                  </spacer>
-                 </item>
+                </item>
+                
                 </layout>
-               </widget>
+              </widget>
               </item>
               
               <!-- DATES -->
@@ -351,49 +392,59 @@
               
               <!-- BOUTONS ACTIONS TÂCHE -->
               <item>
-               <widget class="QWidget" name="taskActionsContainer" native="true">
+              <widget class="QWidget" name="taskActionsContainer" native="true">
                 <layout class="QHBoxLayout" name="taskActionsLayout">
-                 <property name="leftMargin">
+                <property name="leftMargin">
                   <number>0</number>
-                 </property>
-                 <property name="topMargin">
+                </property>
+                <property name="topMargin">
                   <number>0</number>
-                 </property>
-                 <property name="rightMargin">
+                </property>
+                <property name="rightMargin">
                   <number>0</number>
-                 </property>
-                 <property name="bottomMargin">
+                </property>
+                <property name="bottomMargin">
                   <number>0</number>
-                 </property>
-                 <item>
+                </property>
+                <item>
                   <widget class="QPushButton" name="btnSave">
-                   <property name="text">
+                  <property name="text">
                     <string>Enregistrer</string>
-                   </property>
+                  </property>
                   </widget>
-                 </item>
-                 <item>
+                </item>
+                <item>
+                  <widget class="QPushButton" name="btnStartTask">
+                  <property name="text">
+                    <string>Démarrer</string>
+                  </property>
+                  <property name="visible">
+                    <bool>false</bool>
+                  </property>
+                  </widget>
+                </item>
+                <item>
                   <widget class="QPushButton" name="btnClose">
-                   <property name="text">
+                  <property name="text">
                     <string>Clôturer</string>
-                   </property>
+                  </property>
                   </widget>
-                 </item>
-                 <item>
+                </item>
+                <item>
                   <spacer name="horizontalSpacer_2">
-                   <property name="orientation">
+                  <property name="orientation">
                     <enum>Qt::Horizontal</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
+                  </property>
+                  <property name="sizeHint" stdset="0">
                     <size>
-                     <width>40</width>
-                     <height>20</height>
+                    <width>40</width>
+                    <height>20</height>
                     </size>
-                   </property>
+                  </property>
                   </spacer>
-                 </item>
+                </item>
                 </layout>
-               </widget>
+              </widget>
               </item>
               
               <!-- SÉPARATEUR -->

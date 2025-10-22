@@ -28,7 +28,8 @@ class Task:
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None,
         state: TaskState = TaskState.TODO,
-        task_id: Optional[str] = None
+        task_id: Optional[str] = None,
+        waiting_for: Optional[str] = None
     ):
         """
         Initialise une tâche.
@@ -40,6 +41,7 @@ class Task:
             end_date: Date de fin (optionnel)
             state: État initial (par défaut: TODO)
             task_id: ID personnalisé (optionnel, sinon généré automatiquement)
+            waiting_for: ID de la tâche dont on dépend (optionnel)
         """
         # 1. Validation du titre (obligatoire)
         if not title or not title.strip():
@@ -54,6 +56,7 @@ class Task:
         self.start_date = start_date  # Peut être None
         self.end_date = end_date      # Peut être None
         self.state = state
+        self.waiting_for = waiting_for
         self.comments = []  # Liste vide au départ
         
         # 4. Timestamps
@@ -75,7 +78,8 @@ class Task:
         description: Optional[str] = None,
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None,
-        state: Optional[TaskState] = None
+        state: Optional[TaskState] = None,
+        waiting_for: Optional[str] = None
     ):
         """
         Met à jour les attributs de la tâche.
@@ -103,7 +107,10 @@ class Task:
         
         if state is not None:
             self.state = state
-        
+
+        if waiting_for is not None:
+          self.waiting_for = waiting_for
+    
         self._validate_dates()
         self.updated_at = datetime.now()
 
@@ -140,11 +147,27 @@ class Task:
       
       return deleted_count
     
+    def start_task(self):
+      """Démarre une tâche en attente (passe à TODO et retire la dépendance)"""
+      if self.state == TaskState.WAITING:
+          self.state = TaskState.TODO
+          self.waiting_for = None
+          self.updated_at = datetime.now()
+    
     def close_task(self):
-        """Clôture = DONE + end_date auto"""
+        """Clôture la tâche en la marquant comme réalisée"""
         self.state = TaskState.DONE
-        self.end_date = datetime.now()
-        self.updated_at = datetime.now()
+        now = datetime.now()
+        
+        # Si pas de end_date ou si end_date est dans le futur, utilise maintenant
+        if not self.end_date or self.end_date > now:
+            self.end_date = now
+        
+        # Si start_date est dans le futur, la ramène à maintenant aussi
+        if self.start_date and self.start_date > now:
+            self.start_date = now
+        
+        self.updated_at = now
     
     def to_dict(self) -> dict:
         """Pour sauvegarder en JSON"""
@@ -155,6 +178,7 @@ class Task:
             "start_date": self.start_date.isoformat() if self.start_date else None,
             "end_date": self.end_date.isoformat() if self.end_date else None,
             "state": self.state.value,  # Enum -> string
+            "waiting_for": self.waiting_for,
             "comments": [c.to_dict() for c in self.comments],
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat()
@@ -171,7 +195,8 @@ class Task:
             start_date=datetime.fromisoformat(data["start_date"]) if data.get("start_date") else None,
             end_date=datetime.fromisoformat(data["end_date"]) if data.get("end_date") else None,
             state=TaskState.from_string(data["state"]),
-            task_id=data["id"]
+            task_id=data["id"],
+            waiting_for=data.get("waiting_for")
         )
         
         # Restaure les timestamps

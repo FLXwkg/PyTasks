@@ -126,28 +126,53 @@ class Ui_MainWindow(object):
 
         self.stateContainer = QWidget(self.taskDetailsGroup)
         self.stateContainer.setObjectName(u"stateContainer")
-        self.stateLayout = QHBoxLayout(self.stateContainer)
-        self.stateLayout.setObjectName(u"stateLayout")
-        self.stateLayout.setContentsMargins(0, 0, 0, 0)
-        self.labelState = QLabel(self.stateContainer)
+        self.stateMainLayout = QVBoxLayout(self.stateContainer)
+        self.stateMainLayout.setObjectName(u"stateMainLayout")
+        self.stateMainLayout.setContentsMargins(0, 0, 0, 0)
+        self.stateInfoContainer = QWidget(self.stateContainer)
+        self.stateInfoContainer.setObjectName(u"stateInfoContainer")
+        self.stateInfoLayout = QHBoxLayout(self.stateInfoContainer)
+        self.stateInfoLayout.setObjectName(u"stateInfoLayout")
+        self.stateInfoLayout.setContentsMargins(0, 0, 0, 0)
+        self.labelState = QLabel(self.stateInfoContainer)
         self.labelState.setObjectName(u"labelState")
         self.labelState.setFont(font1)
 
-        self.stateLayout.addWidget(self.labelState)
+        self.stateInfoLayout.addWidget(self.labelState)
 
-        self.stateEdit = QComboBox(self.stateContainer)
-        self.stateEdit.addItem("")
-        self.stateEdit.addItem("")
-        self.stateEdit.addItem("")
-        self.stateEdit.addItem("")
-        self.stateEdit.addItem("")
-        self.stateEdit.setObjectName(u"stateEdit")
+        self.stateDisplay = QLabel(self.stateInfoContainer)
+        self.stateDisplay.setObjectName(u"stateDisplay")
 
-        self.stateLayout.addWidget(self.stateEdit)
+        self.stateInfoLayout.addWidget(self.stateDisplay)
 
         self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.stateLayout.addItem(self.horizontalSpacer)
+        self.stateInfoLayout.addItem(self.horizontalSpacer)
+
+
+        self.stateMainLayout.addWidget(self.stateInfoContainer)
+
+        self.waitingForContainer = QWidget(self.stateContainer)
+        self.waitingForContainer.setObjectName(u"waitingForContainer")
+        self.waitingForContainer.setVisible(False)
+        self.waitingForLayout = QHBoxLayout(self.waitingForContainer)
+        self.waitingForLayout.setObjectName(u"waitingForLayout")
+        self.waitingForLayout.setContentsMargins(0, 0, 0, 0)
+        self.labelWaitingFor = QLabel(self.waitingForContainer)
+        self.labelWaitingFor.setObjectName(u"labelWaitingFor")
+        font2 = QFont()
+        font2.setItalic(True)
+        self.labelWaitingFor.setFont(font2)
+
+        self.waitingForLayout.addWidget(self.labelWaitingFor)
+
+        self.waitingForSelect = QComboBox(self.waitingForContainer)
+        self.waitingForSelect.setObjectName(u"waitingForSelect")
+
+        self.waitingForLayout.addWidget(self.waitingForSelect)
+
+
+        self.stateMainLayout.addWidget(self.waitingForContainer)
 
 
         self.taskDetailsLayout.addWidget(self.stateContainer)
@@ -203,6 +228,12 @@ class Ui_MainWindow(object):
         self.btnSave.setObjectName(u"btnSave")
 
         self.taskActionsLayout.addWidget(self.btnSave)
+
+        self.btnStartTask = QPushButton(self.taskActionsContainer)
+        self.btnStartTask.setObjectName(u"btnStartTask")
+        self.btnStartTask.setVisible(False)
+
+        self.taskActionsLayout.addWidget(self.btnStartTask)
 
         self.btnClose = QPushButton(self.taskActionsContainer)
         self.btnClose.setObjectName(u"btnClose")
@@ -333,16 +364,16 @@ class Ui_MainWindow(object):
         self.taskDetailsGroup.setTitle(QCoreApplication.translate("MainWindow", u"D\u00e9tails de la t\u00e2che", None))
         self.labelTitle.setText(QCoreApplication.translate("MainWindow", u"Titre :", None))
         self.labelState.setText(QCoreApplication.translate("MainWindow", u"\u00c9tat :", None))
-        self.stateEdit.setItemText(0, QCoreApplication.translate("MainWindow", u"\u00c0 faire", None))
-        self.stateEdit.setItemText(1, QCoreApplication.translate("MainWindow", u"En cours", None))
-        self.stateEdit.setItemText(2, QCoreApplication.translate("MainWindow", u"R\u00e9alis\u00e9", None))
-        self.stateEdit.setItemText(3, QCoreApplication.translate("MainWindow", u"Abandonn\u00e9", None))
-        self.stateEdit.setItemText(4, QCoreApplication.translate("MainWindow", u"En attente", None))
-
+        self.stateDisplay.setText(QCoreApplication.translate("MainWindow", u"\u00c0 faire", None))
+        self.labelWaitingFor.setText(QCoreApplication.translate("MainWindow", u"En attente de :", None))
+#if QT_CONFIG(tooltip)
+        self.waitingForSelect.setToolTip(QCoreApplication.translate("MainWindow", u"S\u00e9lectionnez la t\u00e2che dont d\u00e9pend cette t\u00e2che", None))
+#endif // QT_CONFIG(tooltip)
         self.labelStartDate.setText(QCoreApplication.translate("MainWindow", u"D\u00e9but :", None))
         self.labelEndDate.setText(QCoreApplication.translate("MainWindow", u"Fin :", None))
         self.labelDescription.setText(QCoreApplication.translate("MainWindow", u"Description :", None))
         self.btnSave.setText(QCoreApplication.translate("MainWindow", u"Enregistrer", None))
+        self.btnStartTask.setText(QCoreApplication.translate("MainWindow", u"D\u00e9marrer", None))
         self.btnClose.setText(QCoreApplication.translate("MainWindow", u"Cl\u00f4turer", None))
         self.labelComments.setText(QCoreApplication.translate("MainWindow", u"Commentaires :", None))
         self.commentInput.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Ajouter un commentaire...", None))

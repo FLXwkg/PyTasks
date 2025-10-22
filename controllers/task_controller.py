@@ -123,6 +123,60 @@ class TaskController(QObject):
             self.logger.log("error", f"Erreur MAJ : {str(e)}")
             self._show_error(f"Erreur : {str(e)}")
             return False
+        
+    def set_waiting_for(self, task_id: str, waiting_for_id: Optional[str]) -> bool:
+      """
+      Définit la tâche dont dépend la tâche actuelle.
+      
+      Args:
+          task_id: ID de la tâche à modifier
+          waiting_for_id: ID de la tâche dont on dépend (None pour retirer)
+      """
+      try:
+          task = self.repository.find_by_id(task_id)
+          if not task:
+              return False
+          
+          task.waiting_for = waiting_for_id
+          task.updated_at = datetime.now()
+          self.repository.save(task)
+          
+          if waiting_for_id:
+              waiting_task = self.repository.find_by_id(waiting_for_id)
+              self.logger.log(
+                  "info",
+                  f"Tâche '{task.title}' en attente de '{waiting_task.title if waiting_task else 'tâche inconnue'}'"
+              )
+          else:
+              self.logger.log("info", f"Dépendance retirée de '{task.title}'")
+          
+          self.load_tasks()
+          return True
+          
+      except Exception as e:
+          self.logger.log("error", f"Erreur définition dépendance : {str(e)}")
+          return False
+
+    def start_waiting_task(self) -> bool:
+        """Démarre la tâche en attente actuelle (passe à TODO)"""
+        if not self.current_task:
+            return False
+        
+        if self.current_task.state != TaskState.WAITING:
+            return False
+        
+        try:
+            self.current_task.start_task()
+            self.repository.save(self.current_task)
+            
+            self.logger.log("success", f"Tâche démarrée : '{self.current_task.title}'")
+            self.load_tasks()
+            
+            return True
+            
+        except Exception as e:
+            self.logger.log("error", f"Erreur démarrage : {str(e)}")
+            return False
     
     # ========== SUPPRESSION ==========
     

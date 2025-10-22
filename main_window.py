@@ -75,39 +75,28 @@ class MainWindow(QMainWindow):
         """Connecte tous les signaux de l'UI au contrôleur"""
         
         # === SIDEBAR ===
-        # Recherche
         self.ui.searchBar.textChanged.connect(self._on_search_changed)
-        
-        # Filtre par état
         self.ui.stateFilter.currentTextChanged.connect(self._on_filter_changed)
-        
-        # Sélection d'une tâche
         self.ui.taskList.itemClicked.connect(self._on_task_selected)
-        
-        # Boutons CRUD
         self.ui.btnAdd.clicked.connect(self._on_add_task)
         self.ui.btnDelete.clicked.connect(self._on_delete_task)
         
         # === DÉTAILS TÂCHE ===
-        # Boutons actions
         self.ui.btnSave.clicked.connect(self._on_save_task)
         self.ui.btnClose.clicked.connect(self._on_close_task)
-        
-        # Commentaires
+        self.ui.btnStartTask.clicked.connect(self._on_start_task)
         self.ui.btnAddComment.clicked.connect(self._on_add_comment)
-        self.ui.commentInput.returnPressed.connect(self._on_add_comment)  # Entrée = ajouter
+        self.ui.commentInput.returnPressed.connect(self._on_add_comment)
+        
+        # Supprimer commentaire
         self.ui.btnDeleteComment.clicked.connect(self._on_delete_comment)
         self.ui.commentsList.itemSelectionChanged.connect(self._on_comment_selection_changed)
-  
         
         # === HISTORIQUE ===
         self.ui.btnClearHistory.clicked.connect(self._on_clear_history)
         
         # === SIGNAUX DU CONTRÔLEUR ===
-        # Quand la liste change
         self.controller.tasks_updated.connect(self._refresh_task_list)
-        
-        # Quand une tâche est sélectionnée
         self.controller.task_selected.connect(self._display_task_details)
     
     # ========== RECHERCHE & FILTRE ==========
@@ -166,7 +155,7 @@ class MainWindow(QMainWindow):
         # Met à jour la barre de statut
         self.statusBar().showMessage(f"{len(tasks)} tâche(s)")
     
-    # ========== SÉLECTION TÂCHE ==========
+    # ========== TÂCHES ==========
     
     @Slot(QListWidgetItem)
     def _on_task_selected(self, item: QListWidgetItem):
@@ -179,40 +168,47 @@ class MainWindow(QMainWindow):
     
     @Slot(Task)
     def _display_task_details(self, task: Task):
-        """Affiche les détails d'une tâche dans le panneau de droite"""
-        # Cache le label "Aucune sélection"
+        """Affiche les détails d'une tâche"""
         self.ui.noSelectionLabel.setVisible(False)
-        
-        # Affiche le groupe de détails
         self.ui.taskDetailsGroup.setVisible(True)
         
         # Remplit les champs
         self.ui.titleEdit.setText(task.title)
         self.ui.descriptionEdit.setPlainText(task.description)
         
-        # État - Retire "Réalisé" de la liste si pas déjà clôturé
-        self.ui.stateEdit.clear()
-        if task.state == TaskState.DONE:
-            # Si déjà clôturé, affiche seulement "Réalisé"
-            self.ui.stateEdit.addItem("Réalisé", TaskState.DONE)
-            self.ui.stateEdit.setCurrentIndex(0)
-        else:
-            # Sinon, affiche tous les états sauf "Réalisé"
-            state_map = [
-                ("À faire", TaskState.TODO),
-                ("En cours", TaskState.IN_PROGRESS),
-                ("Abandonné", TaskState.ABANDONED),
-                ("En attente", TaskState.WAITING)
-            ]
+        # Affiche l'état (lecture seule)
+        state_labels = {
+            TaskState.TODO: "À faire",
+            TaskState.IN_PROGRESS: "En cours",
+            TaskState.DONE: "Réalisé",
+            TaskState.ABANDONED: "Abandonné",
+            TaskState.WAITING: "En attente"
+        }
+        self.ui.stateDisplay.setText(state_labels.get(task.state, "Inconnu"))
+        
+        # Gère l'affichage de la dépendance
+        is_waiting = task.state == TaskState.WAITING
+        self.ui.waitingForContainer.setVisible(is_waiting)
+        
+        if is_waiting:
+            # Remplit la liste des tâches disponibles (lecture seule)
+            self.ui.waitingForSelect.clear()
+            self.ui.waitingForSelect.addItem("(Aucune)", None)
             
-            for label, state in state_map:
-                self.ui.stateEdit.addItem(label, state)
+            all_tasks = self.controller.get_all_tasks()
+            for t in all_tasks:
+                if t.id != task.id and t.state != TaskState.DONE:
+                    self.ui.waitingForSelect.addItem(t.title, t.id)
             
-            # Sélectionne l'état actuel
-            for i in range(self.ui.stateEdit.count()):
-                if self.ui.stateEdit.itemData(i) == task.state:
-                    self.ui.stateEdit.setCurrentIndex(i)
-                    break
+            # Sélectionne la tâche actuelle en attente
+            if task.waiting_for:
+                for i in range(self.ui.waitingForSelect.count()):
+                    if self.ui.waitingForSelect.itemData(i) == task.waiting_for:
+                        self.ui.waitingForSelect.setCurrentIndex(i)
+                        break
+            
+            # ✨ Désactive le sélecteur (lecture seule, défini à la création)
+            self.ui.waitingForSelect.setEnabled(False)
         
         # Dates
         if task.start_date:
@@ -225,158 +221,251 @@ class MainWindow(QMainWindow):
         else:
             self.ui.endDateEdit.clear()
         
-        # 🔒 VERROUILLAGE si tâche clôturée (DONE)
+        # Gestion des boutons selon l'état
         is_done = task.state == TaskState.DONE
         
+        # Verrouillage des champs
         self.ui.titleEdit.setReadOnly(is_done)
         self.ui.descriptionEdit.setReadOnly(is_done)
         self.ui.startDateEdit.setReadOnly(is_done)
         self.ui.endDateEdit.setReadOnly(is_done)
-        self.ui.stateEdit.setEnabled(not is_done)
-        self.ui.btnSave.setEnabled(not is_done)
-        self.ui.btnClose.setEnabled(not is_done)
         
-        # Style visuel pour les champs verrouillés
+        # Boutons
+        self.ui.btnSave.setEnabled(not is_done)
+        self.ui.btnClose.setEnabled(not is_done and not is_waiting)  # Pas de clôture si en attente
+        
+        # Bouton "Démarrer" : visible si en attente, grisé si pas de dépendance satisfaite
+        self.ui.btnStartTask.setVisible(is_waiting)
+        if is_waiting:
+            # Vérifie si la tâche dont on dépend est terminée
+            can_start = True
+            if task.waiting_for:
+                waiting_task = self.controller.repository.find_by_id(task.waiting_for)
+                if waiting_task and waiting_task.state != TaskState.DONE:
+                    can_start = False
+            
+            self.ui.btnStartTask.setEnabled(can_start)
+            
+            # Tooltip explicatif
+            if not can_start:
+                self.ui.btnStartTask.setToolTip("La tâche dont vous dépendez n'est pas encore terminée")
+            else:
+                self.ui.btnStartTask.setToolTip("Démarrer cette tâche")
+        
+        # Style
         if is_done:
             locked_style = "background-color: #f0f0f0; color: #666;"
             self.ui.titleEdit.setStyleSheet(locked_style)
             self.ui.descriptionEdit.setStyleSheet(locked_style)
             self.ui.startDateEdit.setStyleSheet(locked_style)
             self.ui.endDateEdit.setStyleSheet(locked_style)
-            self.ui.stateEdit.setStyleSheet(locked_style)
         else:
-            # Réinitialise le style
             self.ui.titleEdit.setStyleSheet("")
             self.ui.descriptionEdit.setStyleSheet("")
             self.ui.startDateEdit.setStyleSheet("")
             self.ui.endDateEdit.setStyleSheet("")
-            self.ui.stateEdit.setStyleSheet("")
         
-        # Les commentaires restent toujours accessibles
         self._refresh_comments(task)
-    
-    def _refresh_comments(self, task: Task):
-      """Rafraîchit la liste des commentaires"""
-      self.ui.commentsList.clear()
-      
-      for comment in task.comments:
-          timestamp = comment.created_at.strftime("%d/%m/%Y %H:%M")
-          item_text = f"[{timestamp}] {comment.content}"
-          item = QListWidgetItem(item_text)
-          self.ui.commentsList.addItem(item)
-    
-    # ========== CRÉATION TÂCHE ==========
-    
+  
     @Slot()
     def _on_add_task(self):
-      """Déclenché par le bouton Ajouter - Affiche une modale complète"""
-      from PySide6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QTextEdit, QDateTimeEdit, QComboBox, QPushButton, QFormLayout
-      from PySide6.QtCore import QDateTime
-      from datetime import datetime, timedelta
-      
-      # Créer la modale
-      dialog = QDialog(self)
-      dialog.setWindowTitle("Nouvelle tâche")
-      dialog.setMinimumWidth(500)
-      
-      # Layout principal
-      layout = QVBoxLayout()
-      form_layout = QFormLayout()
-      
-      # Champ Titre
-      title_input = QLineEdit()
-      title_input.setPlaceholderText("Entrez le titre de la tâche...")
-      form_layout.addRow("Titre *:", title_input)
-      
-      # Champ Description
-      description_input = QTextEdit()
-      description_input.setPlaceholderText("Description détaillée (optionnel)...")
-      description_input.setMaximumHeight(100)
-      form_layout.addRow("Description :", description_input)
-      
-      # Date de début (date actuelle par défaut)
-      start_date_input = QDateTimeEdit()
-      start_date_input.setCalendarPopup(True)
-      start_date_input.setDateTime(QDateTime.currentDateTime())
-      form_layout.addRow("Date de début :", start_date_input)
-      
-      # Date de fin (date actuelle + 1 jour par défaut)
-      end_date_input = QDateTimeEdit()
-      end_date_input.setCalendarPopup(True)
-      tomorrow = datetime.now() + timedelta(days=1)
-      end_date_input.setDateTime(QDateTime(tomorrow))
-      form_layout.addRow("Date de fin :", end_date_input)
-      
-      # État initial
-      state_input = QComboBox()
-      state_input.addItem("À faire", TaskState.TODO)
-      state_input.addItem("En attente", TaskState.WAITING)
-      state_input.setCurrentIndex(0)  # TODO par défaut
-      form_layout.addRow("État initial :", state_input)
-      
-      layout.addLayout(form_layout)
-      
-      # Boutons
-      button_layout = QHBoxLayout()
-      
-      btn_cancel = QPushButton("Annuler")
-      btn_cancel.clicked.connect(dialog.reject)
-      
-      btn_create = QPushButton("Créer")
-      btn_create.setDefault(True)  # Bouton par défaut (Entrée)
-      btn_create.clicked.connect(dialog.accept)
-      
-      button_layout.addStretch()
-      button_layout.addWidget(btn_cancel)
-      button_layout.addWidget(btn_create)
-      
-      layout.addLayout(button_layout)
-      
-      dialog.setLayout(layout)
-      
-      # Afficher la modale
-      if dialog.exec() == QDialog.Accepted:
-          title = title_input.text().strip()
-          
-          if not title:
-              QMessageBox.warning(self, "Erreur", "Le titre est obligatoire !")
-              return
-          
-          description = description_input.toPlainText().strip()
-          start_date = start_date_input.dateTime().toPython()
-          end_date = end_date_input.dateTime().toPython()
-          state = state_input.currentData()  # Récupère le TaskState
-          
-          # Créer la tâche avec tous les paramètres
-          try:
-              task = Task(
-                  title=title,
-                  description=description,
-                  start_date=start_date,
-                  end_date=end_date,
-                  state=state
-              )
-              
-              self.controller.repository.save(task)
-              self.controller.logger.log("info", f"Tâche créée : '{task.title}'")
-              self.controller.load_tasks()
-
-              self.controller.select_task(task.id)
+        """Déclenché par le bouton Ajouter - Affiche une modale complète"""
+        from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, 
+                                        QLineEdit, QTextEdit, QDateTimeEdit, QComboBox, 
+                                        QPushButton, QFormLayout, QGroupBox, QCheckBox)
+        from PySide6.QtCore import QDateTime
+        from datetime import datetime, timedelta
+        
+        # Créer la modale
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Nouvelle tâche")
+        dialog.setMinimumWidth(550)
+        
+        # Layout principal
+        layout = QVBoxLayout()
+        form_layout = QFormLayout()
+        
+        # Champ Titre
+        title_input = QLineEdit()
+        title_input.setPlaceholderText("Entrez le titre de la tâche...")
+        form_layout.addRow("Titre *:", title_input)
+        
+        # Champ Description
+        description_input = QTextEdit()
+        description_input.setPlaceholderText("Description détaillée (optionnel)...")
+        description_input.setMaximumHeight(100)
+        form_layout.addRow("Description :", description_input)
+        
+        # Date de début (date actuelle par défaut)
+        start_date_input = QDateTimeEdit()
+        start_date_input.setCalendarPopup(True)
+        start_date_input.setDateTime(QDateTime.currentDateTime())
+        form_layout.addRow("Date de début :", start_date_input)
+        
+        # Date de fin (date actuelle + 1 jour par défaut)
+        end_date_input = QDateTimeEdit()
+        end_date_input.setCalendarPopup(True)
+        tomorrow = datetime.now() + timedelta(days=1)
+        end_date_input.setDateTime(QDateTime(tomorrow))
+        form_layout.addRow("Date de fin :", end_date_input)
+        
+        # État initial
+        state_input = QComboBox()
+        state_input.addItem("À faire", TaskState.TODO)
+        state_input.addItem("En attente", TaskState.WAITING)
+        state_input.setCurrentIndex(0)  # TODO par défaut
+        form_layout.addRow("État initial :", state_input)
+        
+        layout.addLayout(form_layout)
+        
+        # Groupe "En attente de" (visible seulement si état = En attente)
+        waiting_group = QGroupBox("Dépendance")
+        waiting_layout = QVBoxLayout()
+        
+        # Recherche de tâche
+        waiting_search = QLineEdit()
+        waiting_search.setPlaceholderText("Rechercher une tâche...")
+        waiting_layout.addWidget(waiting_search)
+        
+        # Liste des tâches
+        waiting_select = QComboBox()
+        waiting_select.addItem("(Aucune dépendance)", None)
+        waiting_layout.addWidget(waiting_select)
+        
+        waiting_group.setLayout(waiting_layout)
+        waiting_group.setVisible(False)  # Caché par défaut
+        layout.addWidget(waiting_group)
+        
+        # Fonction pour remplir la liste des tâches
+        def populate_waiting_tasks(search_text=""):
+            waiting_select.clear()
+            waiting_select.addItem("(Aucune dépendance)", None)
             
-              # Trouver l'item dans la liste et le sélectionner visuellement
-              for i in range(self.ui.taskList.count()):
-                  item = self.ui.taskList.item(i)
-                  if item.data(Qt.UserRole) == task.id:
-                      self.ui.taskList.setCurrentItem(item)
-                      break
-              
-              self.statusBar().showMessage("Tâche créée !", 3000)
-              
-          except ValueError as e:
-              QMessageBox.critical(self, "Erreur de validation", str(e))
-      
-    # ========== MODIFICATION TÂCHE ==========
-    
+            all_tasks = self.controller.get_all_tasks()
+            search_lower = search_text.lower()
+            
+            for task in all_tasks:
+                # Filtre : pas de tâches Abandonnées ou Clôturées
+                if task.state in [TaskState.ABANDONED, TaskState.DONE]:
+                    continue
+                
+                # Recherche par nom
+                if search_text and search_lower not in task.title.lower():
+                    continue
+                
+                waiting_select.addItem(task.title, task.id)
+        
+        # Connection pour la recherche
+        waiting_search.textChanged.connect(populate_waiting_tasks)
+        
+        # Affiche/cache le groupe selon l'état sélectionné
+        def on_state_changed(index):
+            selected_state = state_input.itemData(index)
+            is_waiting = selected_state == TaskState.WAITING
+            waiting_group.setVisible(is_waiting)
+            
+            if is_waiting:
+                populate_waiting_tasks()
+        
+        state_input.currentIndexChanged.connect(on_state_changed)
+        
+        # Boutons
+        button_layout = QHBoxLayout()
+        
+        btn_cancel = QPushButton("Annuler")
+        btn_cancel.clicked.connect(dialog.reject)
+        
+        btn_create = QPushButton("Créer")
+        btn_create.setDefault(True)
+        btn_create.clicked.connect(dialog.accept)
+        
+        button_layout.addStretch()
+        button_layout.addWidget(btn_cancel)
+        button_layout.addWidget(btn_create)
+        
+        layout.addLayout(button_layout)
+        
+        dialog.setLayout(layout)
+        
+        # Afficher la modale
+        if dialog.exec() == QDialog.Accepted:
+            title = title_input.text().strip()
+            
+            if not title:
+                QMessageBox.warning(self, "Erreur", "Le titre est obligatoire !")
+                return
+            
+            description = description_input.toPlainText().strip()
+            start_date = start_date_input.dateTime().toPython()
+            end_date = end_date_input.dateTime().toPython()
+            
+            # Validation des dates
+            if end_date < start_date:
+                QMessageBox.warning(
+                    self,
+                    "Dates invalides",
+                    "La date de fin doit être après la date de début !"
+                )
+                return
+            
+            state = state_input.currentData()
+            
+            # Récupère la dépendance si en attente
+            waiting_for = None
+            if state == TaskState.WAITING:
+                waiting_for = waiting_select.currentData()
+                
+                # ✨ VALIDATION : En attente DOIT avoir une dépendance
+                if not waiting_for:
+                    QMessageBox.warning(
+                        self,
+                        "Dépendance manquante",
+                        "Une tâche 'En attente' doit avoir une dépendance !\n\n"
+                        "Veuillez sélectionner la tâche dont vous dépendez."
+                    )
+                    return
+            
+            # Créer la tâche
+            try:
+                task = Task(
+                    title=title,
+                    description=description,
+                    start_date=start_date,
+                    end_date=end_date,
+                    state=state,
+                    waiting_for=waiting_for
+                )
+                
+                self.controller.repository.save(task)
+                
+                # Log adapté
+                if waiting_for:
+                    waiting_task = self.controller.repository.find_by_id(waiting_for)
+                    waiting_title = waiting_task.title if waiting_task else "tâche inconnue"
+                    self.controller.logger.log(
+                        "info",
+                        f"Tâche créée : '{task.title}' (en attente de '{waiting_title}')"
+                    )
+                else:
+                    self.controller.logger.log("info", f"Tâche créée : '{task.title}'")
+                
+                self.controller.load_tasks()
+                
+                # Sélectionner automatiquement la tâche créée
+                self.controller.select_task(task.id)
+                
+                # Trouver l'item dans la liste et le sélectionner visuellement
+                for i in range(self.ui.taskList.count()):
+                    item = self.ui.taskList.item(i)
+                    if item.data(Qt.UserRole) == task.id:
+                        self.ui.taskList.setCurrentItem(item)
+                        break
+                
+                self.statusBar().showMessage("Tâche créée !", 3000)
+                
+            except ValueError as e:
+                QMessageBox.critical(self, "Erreur de validation", str(e))
+          
     @Slot()
     def _on_save_task(self):
         """Sauvegarde les modifications de la tâche actuelle"""
@@ -386,16 +475,6 @@ class MainWindow(QMainWindow):
         # Récupère les valeurs des champs
         title = self.ui.titleEdit.text()
         description = self.ui.descriptionEdit.toPlainText()
-        
-        # État
-        state_map = [
-            TaskState.TODO,
-            TaskState.IN_PROGRESS,
-            TaskState.DONE,
-            TaskState.ABANDONED,
-            TaskState.WAITING
-        ]
-        state = state_map[self.ui.stateEdit.currentIndex()]
         
         # Dates (peut être None)
         start_date = self.ui.startDateEdit.dateTime().toPython() if self.ui.startDateEdit.dateTime().isValid() else None
@@ -407,14 +486,11 @@ class MainWindow(QMainWindow):
             description=description,
             start_date=start_date,
             end_date=end_date,
-            state=state
         )
         
         if success:
             self.statusBar().showMessage("💾 Tâche enregistrée !", 3000)
-    
-    # ========== SUPPRESSION TÂCHE ==========
-    
+        
     @Slot()
     def _on_delete_task(self):
         """Supprime la tâche sélectionnée"""
@@ -432,9 +508,7 @@ class MainWindow(QMainWindow):
             self.ui.btnDelete.setEnabled(False)
             
             self.statusBar().showMessage("🗑️ Tâche supprimée", 3000)
-    
-    # ========== CLÔTURE TÂCHE ==========
-    
+        
     @Slot()
     def _on_close_task(self):
         """Clôture la tâche actuelle"""
@@ -467,6 +541,53 @@ class MainWindow(QMainWindow):
                 self.controller.select_task(self.controller.current_task.id)
                 self.statusBar().showMessage("Tâche clôturée et verrouillée !", 3000)
     
+    @Slot()
+    def _on_set_waiting(self):
+        """Met la tâche en attente"""
+        if not self.controller.current_task:
+            return
+        
+        # Change l'état
+        success = self.controller.update_current_task(state=TaskState.WAITING)
+        
+        if success:
+            # Rafraîchit pour afficher le sélecteur
+            self.controller.select_task(self.controller.current_task.id)
+            self.statusBar().showMessage("Tâche mise en attente", 2000)
+
+    @Slot()
+    def _on_start_task(self):
+        """Démarre une tâche en attente"""
+        if not self.controller.current_task:
+            return
+        
+        reply = QMessageBox.question(
+            self,
+            "Démarrer la tâche",
+            f"Démarrer la tâche '{self.controller.current_task.title}' ?\n\n"
+            "• État changé en 'À faire'\n"
+            "• Dépendance retirée",
+            QMessageBox.Yes | QMessageBox.No
+        )
+        
+        if reply == QMessageBox.Yes:
+            success = self.controller.start_waiting_task()
+            
+            if success:
+                self.controller.select_task(self.controller.current_task.id)
+                self.statusBar().showMessage("Tâche démarrée !", 2000)
+
+    @Slot(int)
+    def _on_waiting_for_changed(self, index):
+        """Changement de la tâche en attente"""
+        if not self.controller.current_task:
+            return
+        
+        if self.controller.current_task.state != TaskState.WAITING:
+            return
+        
+        waiting_for_id = self.ui.waitingForSelect.currentData()
+        self.controller.set_waiting_for(self.controller.current_task.id, waiting_for_id)
     # ========== COMMENTAIRES ==========
     
     @Slot()
@@ -550,7 +671,16 @@ class MainWindow(QMainWindow):
                 else:
                     self.statusBar().showMessage(f"{count} commentaires supprimés", 2000)
 
-    
+    def _refresh_comments(self, task: Task):
+      """Rafraîchit la liste des commentaires"""
+      self.ui.commentsList.clear()
+      
+      for comment in task.comments:
+          timestamp = comment.created_at.strftime("%d/%m/%Y %H:%M")
+          item_text = f"[{timestamp}] {comment.content}"
+          item = QListWidgetItem(item_text)
+          self.ui.commentsList.addItem(item)
+
     # ========== HISTORIQUE ==========
     
     @Slot()
