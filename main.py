@@ -14,32 +14,30 @@ from utils.logger import Logger
 def main():
     """Fonction principale de l'application"""
     
-    try:
-        print("🚀 Démarrage de PyTasks...")
-        
+    try:        
         # Crée l'application Qt
         app = QApplication(sys.argv)
         app.setApplicationName("PyTasks")
         app.setOrganizationName("PyTasks")
-        print("✅ QApplication créée")
         
+        try:
+            with open("styles.qss", "r", encoding="utf-8") as f:
+                app.setStyleSheet(f.read())
+            print("✅ Styles chargés")
+        except FileNotFoundError:
+            print("⚠️  Fichier styles.qss non trouvé, thème par défaut utilisé")
+  
         # Initialise les composants
         repository = TaskRepository("tasks.json")
-        print("✅ Repository créé")
         
         logger = Logger()
-        print("✅ Logger créé")
         
         controller = TaskController(repository, logger)
-        print("✅ Controller créé")
         
         # Crée la fenêtre principale
-        print("🪟 Création de la fenêtre...")
         window = MainWindow(controller)
-        print("✅ MainWindow créée")
         
         window.show()
-        print("✅ Fenêtre affichée")
         
         # Timer pour rafraîchir l'historique
         def refresh_history():
@@ -48,9 +46,8 @@ def main():
         timer = QTimer()
         timer.timeout.connect(refresh_history)
         timer.start(2000)
-        print("✅ Timer configuré")
-        
-        print("🎉 Lancement de la boucle d'événements...")
+
+        print("✅ Application créée")
         
         # Lance l'application
         sys.exit(app.exec())
