@@ -84,7 +84,9 @@ class MainWindow(QMainWindow):
         # === DÉTAILS TÂCHE ===
         self.ui.btnSave.clicked.connect(self._on_save_task)
         self.ui.btnClose.clicked.connect(self._on_close_task)
+        self.ui.btnStartWork.clicked.connect(self._on_start_work)
         self.ui.btnStartTask.clicked.connect(self._on_start_task)
+        self.ui.btnAbandon.clicked.connect(self._on_abandon_task)
         self.ui.btnAddComment.clicked.connect(self._on_add_comment)
         self.ui.commentInput.returnPressed.connect(self._on_add_comment)
         
@@ -223,18 +225,24 @@ class MainWindow(QMainWindow):
         
         # Gestion des boutons selon l'état
         is_done = task.state == TaskState.DONE
+        is_abandoned = task.state == TaskState.ABANDONED
+        is_waiting = task.state == TaskState.WAITING
+        is_todo = task.state == TaskState.TODO
+        is_in_progress = task.state == TaskState.IN_PROGRESS
         
         # Verrouillage des champs
-        self.ui.titleEdit.setReadOnly(is_done)
-        self.ui.descriptionEdit.setReadOnly(is_done)
-        self.ui.startDateEdit.setReadOnly(is_done)
-        self.ui.endDateEdit.setReadOnly(is_done)
+        is_locked = is_done or is_abandoned
+        self.ui.titleEdit.setReadOnly(is_locked)
+        self.ui.descriptionEdit.setReadOnly(is_locked)
+        self.ui.startDateEdit.setReadOnly(is_locked)
+        self.ui.endDateEdit.setReadOnly(is_locked)
         
         # Boutons
-        self.ui.btnSave.setEnabled(not is_done)
-        self.ui.btnClose.setEnabled(not is_done and not is_waiting)  # Pas de clôture si en attente
+        self.ui.btnSave.setEnabled(not is_locked)
+        self.ui.btnClose.setEnabled(is_in_progress)  
         
         # Bouton "Démarrer" : visible si en attente, grisé si pas de dépendance satisfaite
+        self.ui.btnStartWork.setVisible(is_todo)
         self.ui.btnStartTask.setVisible(is_waiting)
         if is_waiting:
             # Vérifie si la tâche dont on dépend est terminée
@@ -252,8 +260,11 @@ class MainWindow(QMainWindow):
             else:
                 self.ui.btnStartTask.setToolTip("Démarrer cette tâche")
         
+        # Bouton "Abandonner" : visible si pas déjà terminé/abandonné
+        self.ui.btnAbandon.setVisible(not is_locked)
+
         # Style
-        if is_done:
+        if is_locked:
             locked_style = "background-color: #f0f0f0; color: #666;"
             self.ui.titleEdit.setStyleSheet(locked_style)
             self.ui.descriptionEdit.setStyleSheet(locked_style)
@@ -612,6 +623,53 @@ class MainWindow(QMainWindow):
         
         waiting_for_id = self.ui.waitingForSelect.currentData()
         self.controller.set_waiting_for(self.controller.current_task.id, waiting_for_id)
+    
+    @Slot()
+    def _on_start_work(self):
+        """Commence le travail (passe à EN COURS)"""
+        if not self.controller.current_task:
+            return
+        
+        reply = QMessageBox.question(
+            self,
+            "Commencer la tâche",
+            f"Commencer le travail sur '{self.controller.current_task.title}' ?\n\n"
+            "• État changé en 'En cours'",
+            QMessageBox.Yes | QMessageBox.No
+        )
+        
+        if reply == QMessageBox.Yes:
+            success = self.controller.start_work_on_task()
+            
+            if success:
+                self.controller.select_task(self.controller.current_task.id)
+                self.statusBar().showMessage("Travail commencé !", 2000)
+
+    @Slot()
+    def _on_abandon_task(self):
+        """Abandonne la tâche"""
+        if not self.controller.current_task:
+            return
+        
+        reply = QMessageBox.question(
+            self,
+            "Abandonner la tâche",
+            f"Abandonner la tâche '{self.controller.current_task.title}' ?\n\n"
+            "Actions effectuées :\n"
+            "• État changé en 'Abandonné'\n"
+            "• Date de fin mise à la date actuelle\n"
+            "• Modification des champs verrouillée\n\n"
+            "Les commentaires resteront accessibles.",
+            QMessageBox.Yes | QMessageBox.No
+        )
+        
+        if reply == QMessageBox.Yes:
+            success = self.controller.abandon_task()
+            
+            if success:
+                self.controller.select_task(self.controller.current_task.id)
+                self.statusBar().showMessage("Tâche abandonnée", 2000)
+    
     # ========== COMMENTAIRES ==========
     
     @Slot()

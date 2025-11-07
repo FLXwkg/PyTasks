@@ -414,9 +414,29 @@
                   </widget>
                 </item>
                 <item>
+                  <widget class="QPushButton" name="btnStartWork">
+                  <property name="text">
+                    <string>Commencer</string>
+                  </property>
+                  <property name="visible">
+                    <bool>false</bool>
+                  </property>
+                  </widget>
+                </item>
+                <item>
                   <widget class="QPushButton" name="btnStartTask">
                   <property name="text">
                     <string>Démarrer</string>
+                  </property>
+                  <property name="visible">
+                    <bool>false</bool>
+                  </property>
+                  </widget>
+                </item>
+                <item>
+                  <widget class="QPushButton" name="btnAbandon">
+                  <property name="text">
+                    <string>Abandonner</string>
                   </property>
                   <property name="visible">
                     <bool>false</bool>

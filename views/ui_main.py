@@ -229,11 +229,23 @@ class Ui_MainWindow(object):
 
         self.taskActionsLayout.addWidget(self.btnSave)
 
+        self.btnStartWork = QPushButton(self.taskActionsContainer)
+        self.btnStartWork.setObjectName(u"btnStartWork")
+        self.btnStartWork.setVisible(False)
+
+        self.taskActionsLayout.addWidget(self.btnStartWork)
+
         self.btnStartTask = QPushButton(self.taskActionsContainer)
         self.btnStartTask.setObjectName(u"btnStartTask")
         self.btnStartTask.setVisible(False)
 
         self.taskActionsLayout.addWidget(self.btnStartTask)
+
+        self.btnAbandon = QPushButton(self.taskActionsContainer)
+        self.btnAbandon.setObjectName(u"btnAbandon")
+        self.btnAbandon.setVisible(False)
+
+        self.taskActionsLayout.addWidget(self.btnAbandon)
 
         self.btnClose = QPushButton(self.taskActionsContainer)
         self.btnClose.setObjectName(u"btnClose")
@@ -373,7 +385,9 @@ class Ui_MainWindow(object):
         self.labelEndDate.setText(QCoreApplication.translate("MainWindow", u"Fin :", None))
         self.labelDescription.setText(QCoreApplication.translate("MainWindow", u"Description :", None))
         self.btnSave.setText(QCoreApplication.translate("MainWindow", u"Enregistrer", None))
+        self.btnStartWork.setText(QCoreApplication.translate("MainWindow", u"Commencer", None))
         self.btnStartTask.setText(QCoreApplication.translate("MainWindow", u"D\u00e9marrer", None))
+        self.btnAbandon.setText(QCoreApplication.translate("MainWindow", u"Abandonner", None))
         self.btnClose.setText(QCoreApplication.translate("MainWindow", u"Cl\u00f4turer", None))
         self.labelComments.setText(QCoreApplication.translate("MainWindow", u"Commentaires :", None))
         self.commentInput.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Ajouter un commentaire...", None))

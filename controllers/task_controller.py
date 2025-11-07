@@ -232,6 +232,55 @@ class TaskController(QObject):
         except Exception as e:
             self.logger.log("error", f"Erreur clôture : {str(e)}")
             return False
+        
+    # ========== EN COURS ==========
+
+    def start_work_on_task(self) -> bool:
+        """Commence le travail sur la tâche actuelle (passe à IN_PROGRESS)"""
+        if not self.current_task:
+            return False
+        
+        if self.current_task.state in [TaskState.DONE, TaskState.ABANDONED]:
+            return False
+        
+        try:
+            self.current_task.state = TaskState.IN_PROGRESS
+            self.current_task.updated_at = datetime.now()
+            self.repository.save(self.current_task)
+            
+            self.logger.log("info", f"Travail commencé : '{self.current_task.title}'")
+            self.load_tasks()
+            
+            return True
+            
+        except Exception as e:
+            self.logger.log("error", f"Erreur début travail : {str(e)}")
+            return False
+        
+    # ========== ABANDONNER ==========
+
+    def abandon_task(self) -> bool:
+        """Abandonne la tâche actuelle (passe à ABANDONED)"""
+        if not self.current_task:
+            return False
+        
+        if self.current_task.state in [TaskState.DONE, TaskState.ABANDONED]:
+            return False
+        
+        try:
+            self.current_task.state = TaskState.ABANDONED
+            self.current_task.end_date = datetime.now()
+            self.current_task.updated_at = datetime.now()
+            self.repository.save(self.current_task)
+            
+            self.logger.log("warning", f"Tâche abandonnée : '{self.current_task.title}'")
+            self.load_tasks()
+            
+            return True
+            
+        except Exception as e:
+            self.logger.log("error", f"Erreur abandon : {str(e)}")
+            return False
     
     # ========== COMMENTAIRES ==========
     
