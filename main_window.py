@@ -272,7 +272,7 @@ class MainWindow(QMainWindow):
         """Déclenché par le bouton Ajouter - Affiche une modale complète"""
         from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, 
                                         QLineEdit, QTextEdit, QDateTimeEdit, QComboBox, 
-                                        QPushButton, QFormLayout, QGroupBox, QCheckBox)
+                                        QPushButton, QFormLayout, QGroupBox)
         from PySide6.QtCore import QDateTime
         from datetime import datetime, timedelta
         
@@ -329,7 +329,7 @@ class MainWindow(QMainWindow):
         
         # Liste des tâches
         waiting_select = QComboBox()
-        waiting_select.addItem("(Aucune dépendance)", None)
+        waiting_select.addItem("(Sélectionnez une tâche)", None)
         waiting_layout.addWidget(waiting_select)
         
         waiting_group.setLayout(waiting_layout)
@@ -339,7 +339,7 @@ class MainWindow(QMainWindow):
         # Fonction pour remplir la liste des tâches
         def populate_waiting_tasks(search_text=""):
             waiting_select.clear()
-            waiting_select.addItem("(Aucune dépendance)", None)
+            waiting_select.addItem("(Sélectionnez une tâche)", None)
             
             all_tasks = self.controller.get_all_tasks()
             search_lower = search_text.lower()
@@ -357,17 +357,6 @@ class MainWindow(QMainWindow):
         
         # Connection pour la recherche
         waiting_search.textChanged.connect(populate_waiting_tasks)
-        
-        # Affiche/cache le groupe selon l'état sélectionné
-        def on_state_changed(index):
-            selected_state = state_input.itemData(index)
-            is_waiting = selected_state == TaskState.WAITING
-            waiting_group.setVisible(is_waiting)
-            
-            if is_waiting:
-                populate_waiting_tasks()
-        
-        state_input.currentIndexChanged.connect(on_state_changed)
         
         # Boutons
         button_layout = QHBoxLayout()
@@ -387,45 +376,80 @@ class MainWindow(QMainWindow):
         
         dialog.setLayout(layout)
         
+        # ✨ FONCTION DE VALIDATION EN TEMPS RÉEL
+        def validate_form():
+            """Valide le formulaire et active/désactive le bouton Créer"""
+            # Vérifie le titre
+            has_title = bool(title_input.text().strip())
+            
+            # Vérifie les dates
+            start_date = start_date_input.dateTime().toPython()
+            end_date = end_date_input.dateTime().toPython()
+            dates_valid = end_date >= start_date
+            
+            # Vérifie la dépendance si en attente
+            selected_state = state_input.currentData()
+            if selected_state == TaskState.WAITING:
+                has_dependency = waiting_select.currentData() is not None
+            else:
+                has_dependency = True  # Pas nécessaire si pas en attente
+            
+            # Active le bouton seulement si tout est valide
+            is_valid = has_title and dates_valid and has_dependency
+            btn_create.setEnabled(is_valid)
+            
+            # Feedback visuel sur les champs invalides
+            if not has_title:
+                title_input.setStyleSheet("border: 1px solid #ff6b6b;")
+            else:
+                title_input.setStyleSheet("")
+            
+            if not dates_valid:
+                end_date_input.setStyleSheet("border: 1px solid #ff6b6b;")
+            else:
+                end_date_input.setStyleSheet("")
+            
+            if selected_state == TaskState.WAITING and not has_dependency:
+                waiting_select.setStyleSheet("border: 1px solid #ff6b6b;")
+            else:
+                waiting_select.setStyleSheet("")
+        
+        # Affiche/cache le groupe selon l'état sélectionné
+        def on_state_changed(index):
+            selected_state = state_input.itemData(index)
+            is_waiting = selected_state == TaskState.WAITING
+            waiting_group.setVisible(is_waiting)
+            
+            if is_waiting:
+                populate_waiting_tasks()
+            
+            validate_form()  # ✨ Revalide après changement d'état
+        
+        state_input.currentIndexChanged.connect(on_state_changed)
+        
+        # ✨ Connecte tous les champs à la validation
+        title_input.textChanged.connect(validate_form)
+        start_date_input.dateTimeChanged.connect(validate_form)
+        end_date_input.dateTimeChanged.connect(validate_form)
+        waiting_select.currentIndexChanged.connect(validate_form)
+        
+        # ✨ Validation initiale (désactive le bouton si titre vide)
+        validate_form()
+        
         # Afficher la modale
         if dialog.exec() == QDialog.Accepted:
             title = title_input.text().strip()
-            
-            if not title:
-                QMessageBox.warning(self, "Erreur", "Le titre est obligatoire !")
-                return
-            
             description = description_input.toPlainText().strip()
             start_date = start_date_input.dateTime().toPython()
             end_date = end_date_input.dateTime().toPython()
-            
-            # Validation des dates
-            if end_date < start_date:
-                QMessageBox.warning(
-                    self,
-                    "Dates invalides",
-                    "La date de fin doit être après la date de début !"
-                )
-                return
-            
             state = state_input.currentData()
             
             # Récupère la dépendance si en attente
             waiting_for = None
             if state == TaskState.WAITING:
                 waiting_for = waiting_select.currentData()
-                
-                # ✨ VALIDATION : En attente DOIT avoir une dépendance
-                if not waiting_for:
-                    QMessageBox.warning(
-                        self,
-                        "Dépendance manquante",
-                        "Une tâche 'En attente' doit avoir une dépendance !\n\n"
-                        "Veuillez sélectionner la tâche dont vous dépendez."
-                    )
-                    return
             
-            # Créer la tâche
+            # Créer la tâche (plus besoin de validation, le bouton était désactivé si invalide)
             try:
                 task = Task(
                     title=title,
