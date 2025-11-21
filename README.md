@@ -51,7 +51,7 @@ python main.py
 
 ## 👨‍💻 Contexte
 
-Projet réalisé dans le cadre d'un exercice d'apprentissage du pattern MVC avec PySide6.
+Projet réalisé dans le cadre d'un exercice d'apprentissage de PySide6.
 
 **Date** : Novembre 2025  
 **Technologies** : Python 3.13, PySide6 6.7.0, Qt Designer
