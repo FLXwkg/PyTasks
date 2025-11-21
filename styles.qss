@@ -82,11 +82,9 @@ QComboBox::drop-down {
 }
 
 QComboBox::down-arrow {
-    image: none;
-    border-left: 5px solid transparent;
-    border-right: 5px solid transparent;
-    border-top: 5px solid #9b7fd4;
-    margin-right: 5px;
+    image: url(assets/down-arrow.svg);
+    width: 12px;
+    height: 8px;
 }
 
 /* === LISTE DES TÂCHES === */
@@ -501,4 +499,142 @@ QMessageBox {
 
 QMessageBox QPushButton {
     min-width: 80px;
+}
+
+/* === DIALOGUES / MODALES === */
+QDialog {
+    background-color: white;
+}
+
+QDialog QLabel {
+    color: #2c2c2e;
+}
+
+QDialog QLineEdit,
+QDialog QTextEdit {
+    border: 1px solid #e5e5ea;
+    border-radius: 6px;
+    padding: 6px 10px;
+    background-color: white;
+    color: #2c2c2e;
+}
+
+QDialog QLineEdit:focus,
+QDialog QTextEdit:focus {
+    border: 2px solid #9b7fd4;
+    background-color: #fdfbff;
+}
+
+QDialog QComboBox {
+    border: 1px solid #e5e5ea;
+    border-radius: 6px;
+    padding: 6px 10px;
+    background-color: white;
+    color: #2c2c2e;
+}
+
+QDialog QComboBox:hover {
+    border: 1px solid #9b7fd4;
+}
+
+QDialog QComboBox:focus {
+    border: 2px solid #9b7fd4;
+}
+
+QDialog QComboBox QAbstractItemView {
+    border: 1px solid #9b7fd4;
+    border-radius: 6px;
+    background-color: white;
+    selection-background-color: #e8dff5;
+    selection-color: #5e3a9e;
+    padding: 4px;
+    color: #2c2c2e;
+}
+
+QDialog QDateTimeEdit {
+    border: 1px solid #e5e5ea;
+    border-radius: 6px;
+    padding: 6px 10px;
+    background-color: white;
+    color: #2c2c2e;
+}
+
+QDialog QDateTimeEdit:focus {
+    border: 2px solid #9b7fd4;
+    background-color: #fdfbff;
+}
+
+QDialog QDateTimeEdit::up-button,
+QDialog QDateTimeEdit::down-button {
+    border: none;
+    background-color: #9b7fd4;
+    border-radius: 3px;
+}
+
+QDialog QDateTimeEdit::up-button:hover,
+QDialog QDateTimeEdit::down-button:hover {
+    background-color: #8668c4;
+}
+
+QDialog QGroupBox {
+    border: 2px solid #e5e5ea;
+    border-radius: 8px;
+    margin-top: 12px;
+    padding-top: 16px;
+    background-color: #fafafa;
+    font-weight: 600;
+    color: #5e3a9e;
+}
+
+QDialog QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    padding: 4px 10px;
+    background-color: #9b7fd4;
+    color: white;
+    border-radius: 4px;
+    margin-left: 10px;
+}
+
+QDialog QPushButton {
+    background-color: #9b7fd4;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 600;
+    min-width: 80px;
+}
+
+QDialog QPushButton:hover {
+    background-color: #8668c4;
+}
+
+QDialog QPushButton:pressed {
+    background-color: #7556b3;
+}
+
+QDialog QPushButton:disabled {
+    background-color: #e5e5ea;
+    color: #48484a;
+    cursor: not-allowed;
+}
+
+/* === MESSAGEBOX (Confirmations) === */
+QMessageBox QLabel {
+    color: #2c2c2e;
+    min-width: 300px;
+}
+
+QDateTimeEdit::drop-down {
+    border: none;
+    width: 20px;
+    subcontrol-origin: padding;
+    subcontrol-position: center right;
+}
+
+QDateTimeEdit::down-arrow {
+    image: url(assets/down-arrow.svg);
+    width: 12px;
+    height: 8px;
 }
